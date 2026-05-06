@@ -1,0 +1,10 @@
+node_modules
+artifacts/tg-miniapp/node_modules
+artifacts/api-server/node_modules
+artifacts/mockup-sandbox
+lib/*/node_modules
+**/dist
+**/.replit-artifact
+.git
+.local
+attached_assets
