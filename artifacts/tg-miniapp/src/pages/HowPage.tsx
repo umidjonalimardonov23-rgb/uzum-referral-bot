@@ -1,3 +1,8 @@
+import { useState } from "react";
+import { useTelegram } from "../hooks/useTelegram";
+
+const APP_LINK = "https://b.2u.uz/ref?c=50&a=L6DaizF7cl";
+
 const steps = [
   {
     step: "01",
@@ -28,39 +33,54 @@ const steps = [
 const faqs = [
   {
     q: "💳 Karta ochish to'lovmi?",
-    a: "Yo'q! Uzum Bank virtual kartasi to'liq bepul. 0 so'mga ochiladi.",
+    a: "Yo'q! Uzum Bank virtual kartasi to'liq bepul. 0 so'mga ochiladi. Hech qanday yashirin to'lov yo'q.",
   },
   {
     q: "💰 Qachon pul tushadi?",
-    a: "Do'stingiz karta ochgandan so'ng bir necha soat ichida pul hisobingizga tushadi.",
+    a: "Do'stingiz karta ochgandan so'ng bir necha soat ichida pul hisobingizga tushadi. Odatda 1-24 soat ichida.",
   },
   {
     q: "👥 Nechta do'st taklif qilsa bo'ladi?",
-    a: "Cheklov yo'q! Qancha ko'p do'st taklif qilsangiz, shuncha ko'p daromad olasiz.",
+    a: "Cheklov yo'q! Qancha ko'p do'st taklif qilsangiz, shuncha ko'p daromad olasiz. Limitsiz!",
   },
   {
     q: "🛒 Uzum Market bonuslari nima?",
     a: "Uzum Bank kartasi egasi sifatida Uzum Marketdagi maxsus chegirmalar va bonuslardan foydalanasiz.",
   },
+  {
+    q: "📱 Ilova qayerdan yuklanadi?",
+    a: "Uzum Bank ilovasi App Store va Google Play'da mavjud. Referral havola orqali to'g'ridan-to'g'ri yuklab olishingiz mumkin.",
+  },
+  {
+    q: "🔒 Pulim xavfsizmi?",
+    a: "Ha! Uzum Bank O'zbekiston Markaziy Banki tomonidan litsenziyalangan. Barcha mablag'lar kafolatlangan.",
+  },
 ];
 
 export default function HowPage() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const { haptic } = useTelegram();
+
+  const toggleFaq = (i: number) => {
+    haptic.impact("light");
+    setOpenIdx(openIdx === i ? null : i);
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pb-4">
       {/* Header */}
       <div className="bg-gradient-to-br from-indigo-500 via-purple-600 to-violet-700 px-5 pt-10 pb-14 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {["⭐", "💫", "✨", "⭐", "💫", "✨", "⭐", "💫", "✨", "⭐"].map((em, i) => (
             <div
               key={i}
               className="absolute text-2xl"
               style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
+                top: `${(i * 17 + 5) % 90}%`,
+                left: `${(i * 23 + 10) % 90}%`,
               }}
             >
-              {["⭐", "💫", "✨"][i % 3]}
+              {em}
             </div>
           ))}
         </div>
@@ -69,7 +89,7 @@ export default function HowPage() {
             📖 Qanday ishlaydi?
           </div>
           <h1 className="text-2xl font-black text-white">
-            3 ta qadam — <br />
+            3 ta qadam —<br />
             <span className="text-yellow-300">pul sizniki! 💸</span>
           </h1>
         </div>
@@ -100,7 +120,7 @@ export default function HowPage() {
         <p className="text-xs font-bold text-white/60 mb-3 uppercase tracking-wider">Jarayon</p>
         <div className="flex items-center gap-2 justify-between">
           {[
-            { icon: "📤", label: "Yuborg" },
+            { icon: "📤", label: "Yubordi" },
             { icon: "→", label: "" },
             { icon: "💳", label: "Karta" },
             { icon: "→", label: "" },
@@ -114,14 +134,42 @@ export default function HowPage() {
         </div>
       </div>
 
-      {/* FAQ */}
-      <div className="px-4 mt-5 mb-4">
+      {/* CTA */}
+      <div className="px-4 mt-5">
+        <a
+          href={APP_LINK}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => haptic.impact("heavy")}
+          className="w-full bg-gradient-to-r from-violet-600 to-purple-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-purple-200 active:scale-95 transition-transform"
+        >
+          🚀 Hoziroq Boshlash →
+        </a>
+      </div>
+
+      {/* FAQ — Accordion */}
+      <div className="px-4 mt-5">
         <h2 className="text-sm font-bold text-gray-700 mb-3">❓ Ko'p so'raladigan savollar</h2>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {faqs.map((faq, i) => (
-            <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-              <p className="text-sm font-bold text-gray-800">{faq.q}</p>
-              <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{faq.a}</p>
+            <div
+              key={i}
+              className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
+            >
+              <button
+                onClick={() => toggleFaq(i)}
+                className="w-full flex items-center justify-between p-4 text-left"
+              >
+                <p className="text-sm font-bold text-gray-800 flex-1 pr-2">{faq.q}</p>
+                <span className={`text-gray-400 text-lg transition-transform duration-200 ${openIdx === i ? "rotate-180" : ""}`}>
+                  ⌄
+                </span>
+              </button>
+              {openIdx === i && (
+                <div className="px-4 pb-4 -mt-1">
+                  <p className="text-xs text-gray-500 leading-relaxed">{faq.a}</p>
+                </div>
+              )}
             </div>
           ))}
         </div>

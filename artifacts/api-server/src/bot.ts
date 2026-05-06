@@ -10,6 +10,7 @@ import { logger } from "./lib/logger";
 const APP_LINK = "https://b.2u.uz/ref?c=50&a=L6DaizF7cl";
 const BOT_LINK = "https://t.me/UzumBankRbot?start=L6DaizF7cl";
 const SUPPORT_USERNAME = "@UzumSupport";
+const ADMIN_ID = 8787603995;
 
 interface SessionData {
   lang?: "uz" | "ru";
@@ -168,9 +169,20 @@ export function startBot() {
 
   bot.use(session({ initial: (): SessionData => ({ lang: "uz" }) }));
 
+  // ── Admin notify helper ──
+  async function notifyAdmin(text: string) {
+    try {
+      await bot.api.sendMessage(ADMIN_ID, text, { parse_mode: "Markdown" });
+    } catch {
+      // Admin may not have started the bot yet
+    }
+  }
+
   // ── /start ──
   bot.command("start", async (ctx) => {
     const name = ctx.from?.first_name || "Do'stim";
+    const username = ctx.from?.username ? `@${ctx.from.username}` : "username yo'q";
+    const userId = ctx.from?.id;
     const lang = ctx.session.lang ?? "uz";
     const t = T[lang];
 
@@ -178,6 +190,64 @@ export function startBot() {
       parse_mode: "Markdown",
       reply_markup: mainKb(lang, !!MINI_APP_URL),
     });
+
+    if (userId !== ADMIN_ID) {
+      await notifyAdmin(
+        `🆕 *Yangi foydalanuvchi!*\n\n👤 Ism: *${name}*\n🔗 Username: ${username}\n🆔 ID: \`${userId}\`\n🌐 Til: ${lang === "uz" ? "🇺🇿 O'zbek" : "🇷🇺 Rus"}`
+      );
+    }
+  });
+
+  // ── /admin ──
+  bot.command("admin", async (ctx) => {
+    if (ctx.from?.id !== ADMIN_ID) {
+      await ctx.reply("❌ Sizda admin huquqi yo'q.");
+      return;
+    }
+    const kb = new InlineKeyboard()
+      .text("📊 Statistika", "admin_stats").row()
+      .text("📢 Xabar yuborish", "admin_broadcast").row()
+      .text("🔗 Havolalar", "admin_links");
+
+    await ctx.reply(
+      `🛠 *Admin Panel*\n\n` +
+      `👑 Xush kelibsiz, Admin!\n\n` +
+      `📱 App: \`${APP_LINK}\`\n` +
+      `🤖 Bot: \`${BOT_LINK}\`\n\n` +
+      `Quyidagi tugmalardan foydalaning:`,
+      { parse_mode: "Markdown", reply_markup: kb }
+    );
+  });
+
+  bot.callbackQuery("admin_stats", async (ctx) => {
+    if (ctx.from?.id !== ADMIN_ID) { await ctx.answerCallbackQuery("❌"); return; }
+    await ctx.answerCallbackQuery();
+    await ctx.reply(
+      `📊 *Bot Statistikasi*\n\n` +
+      `✅ Bot ishlayapti\n` +
+      `🔗 App havola: \`${APP_LINK}\`\n` +
+      `🤖 Bot havola: \`${BOT_LINK}\`\n\n` +
+      `💡 Har yangi foydalanuvchi haqida sizga xabar keladi.`,
+      { parse_mode: "Markdown" }
+    );
+  });
+
+  bot.callbackQuery("admin_broadcast", async (ctx) => {
+    if (ctx.from?.id !== ADMIN_ID) { await ctx.answerCallbackQuery("❌"); return; }
+    await ctx.answerCallbackQuery();
+    await ctx.reply(
+      `📢 *Xabar yuborish*\n\nFoydalanuvchilarga xabar yuborish uchun:\n\`/broadcast <xabar matni>\`\n\nMasalan:\n/broadcast 🎉 Yangi aksiya boshlandi!`,
+      { parse_mode: "Markdown" }
+    );
+  });
+
+  bot.callbackQuery("admin_links", async (ctx) => {
+    if (ctx.from?.id !== ADMIN_ID) { await ctx.answerCallbackQuery("❌"); return; }
+    await ctx.answerCallbackQuery();
+    await ctx.reply(
+      `🔗 *Referral Havolalar*\n\n📱 *App:*\n\`${APP_LINK}\`\n\n🤖 *Bot:*\n\`${BOT_LINK}\``,
+      { parse_mode: "Markdown" }
+    );
   });
 
   // ── /lang ──

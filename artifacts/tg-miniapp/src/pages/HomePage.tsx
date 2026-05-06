@@ -1,23 +1,30 @@
 import { useState } from "react";
+import { useCountUp } from "../hooks/useCountUp";
+import { useTelegram } from "../hooks/useTelegram";
+import SocialProof from "../components/SocialProof";
 
 const APP_LINK = "https://b.2u.uz/ref?c=50&a=L6DaizF7cl";
 const BOT_LINK = "https://t.me/UzumBankRbot?start=L6DaizF7cl";
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
+  const { haptic } = useTelegram();
+
   const handleCopy = () => {
     navigator.clipboard.writeText(text).then(() => {
+      haptic.success();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
   return (
     <button
       onClick={handleCopy}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 ${
         copied
           ? "bg-green-100 text-green-700"
-          : "bg-white/20 text-white hover:bg-white/30 active:scale-95"
+          : "bg-white/20 text-white hover:bg-white/30"
       }`}
     >
       {copied ? "✅ Nusxalandi!" : `📋 ${label}`}
@@ -26,8 +33,13 @@ function CopyButton({ text, label }: { text: string; label: string }) {
 }
 
 export default function HomePage() {
+  const count = useCountUp(45000, 1400);
+  const users = useCountUp(12847, 1800);
+
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex flex-col gap-0 pb-4">
+      <SocialProof />
+
       {/* Hero */}
       <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-700 to-indigo-700 px-5 pt-10 pb-16">
         <div className="absolute top-4 right-4 text-4xl animate-float opacity-40">💸</div>
@@ -39,8 +51,11 @@ export default function HomePage() {
             ⚡️ TEZ VA OSON
           </div>
           <h1 className="text-3xl font-black text-white leading-tight">
-            45 000 so'm<br />
-            <span className="text-yellow-300">sizniki! 🎉</span>
+            <span className="text-yellow-300">
+              {count.toLocaleString("uz")}
+            </span>{" "}
+            so'm<br />
+            sizniki! 🎉
           </h1>
           <p className="text-white/80 text-sm mt-2 leading-relaxed">
             Har bir do'stingizni taklif qiling va pul ishlang 💰
@@ -48,20 +63,20 @@ export default function HomePage() {
 
           <div className="mt-5 flex items-center gap-3">
             <div className="flex -space-x-2">
-              {["😊","🤩","😎","🥳"].map((em, i) => (
+              {["😊", "🤩", "😎", "🥳"].map((em, i) => (
                 <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-white flex items-center justify-center text-sm">
                   {em}
                 </div>
               ))}
             </div>
             <p className="text-white/70 text-xs">
-              Minglab odamlar allaqachon ishlayapti!
+              <span className="font-black text-yellow-300">{users.toLocaleString("uz")}</span> kishi allaqachon ishlayapti!
             </p>
           </div>
         </div>
       </div>
 
-      {/* Earnings Counter */}
+      {/* Earnings Card */}
       <div className="mx-4 -mt-8 relative z-10">
         <div className="bg-white rounded-2xl shadow-xl p-4 border border-purple-100">
           <p className="text-xs text-gray-500 font-medium mb-1">Bir taklif uchun daromad</p>
@@ -147,7 +162,7 @@ export default function HomePage() {
       </div>
 
       {/* Quick Stats */}
-      <div className="px-4 mt-5 mb-2">
+      <div className="px-4 mt-5">
         <div className="grid grid-cols-3 gap-3">
           {[
             { icon: "💳", value: "0 so'm", label: "Karta ochish" },
