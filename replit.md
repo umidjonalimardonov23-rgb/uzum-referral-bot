@@ -1,45 +1,58 @@
-# [Project name]
+# Uzum Bank Referral Mini App & Telegram Bot
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Telegram Mini App va Bot orqali Uzum Bank referral dasturini boshqarish — foydalanuvchilar referral havolalar orqali o'tib, do'stlarini taklif qilishi mumkin.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/tg-miniapp run dev` — Mini App frontend (port 5173)
+- `pnpm --filter @workspace/api-server run dev` — API server + Telegram Bot (port 8080)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `TELEGRAM_BOT_TOKEN` — Telegram Bot token from @BotFather
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Frontend: React + Vite + Tailwind CSS (shadcn/ui)
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Telegram Bot: grammy v1
+- Build: esbuild (CJS bundle) — grammy is externalized
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/tg-miniapp/src/` — Telegram Mini App React frontend
+  - `pages/` — HomePage, FriendsPage, HowPage, InfoPage
+  - `components/` — BottomNav, SplashScreen
+- `artifacts/api-server/src/bot.ts` — Telegram Bot (grammy)
+- `artifacts/api-server/src/index.ts` — starts bot after server listen
+- `artifacts/api-server/build.mjs` — esbuild config (grammy externalized)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- grammy bot is externalized in esbuild (not bundled) due to platform-native module issues
+- Bot starts after Express server binds to port to avoid startup race conditions
+- Mini App uses port 5173 (Vite default, supported by workflow system)
+- Referral links are hardcoded constants in both frontend and bot
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Telegram Mini App**: 4-page app (Bosh sahifa, Do'stlar, Qanday?, Ma'lumot) with splash screen and bottom nav
+- **Telegram Bot**: /start command with inline keyboard menus, referral link sharing, FAQ
+- Referral links: App (https://b.2u.uz/ref?c=50&a=L6DaizF7cl) and Bot (https://t.me/UzumBankRbot?start=L6DaizF7cl)
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Uzbek language interface
+- Pro emojis throughout the UI
+- Purple/violet color theme (Uzum Bank branding)
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- grammy must be in `external` list in `artifacts/api-server/build.mjs`
+- Mini App port must be 5173 (not arbitrary) — workflow system only supports specific ports
+- Bot token loaded from TELEGRAM_BOT_TOKEN secret env var
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See the `pnpm-workspace` skill for workspace structure
+- grammy docs: https://grammy.dev
