@@ -10,7 +10,9 @@ interface SessionData {
 
 type MyContext = SessionFlavor<SessionData>;
 
-const MINI_APP_URL = process.env.MINI_APP_URL || "";
+const rawDomains = process.env.REPLIT_DOMAINS || process.env.REPLIT_DEV_DOMAIN || "";
+const primaryDomain = rawDomains.split(",")[0]?.trim();
+const MINI_APP_URL = primaryDomain ? `https://${primaryDomain}/` : (process.env.MINI_APP_URL || "");
 
 const welcomeText = `
 ⚡️ *Assalomu alaykum! Xush kelibsiz!* ⚡️
