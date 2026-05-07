@@ -1,4 +1,6 @@
 'use strict';
+// v2.1 - @uzum_bonus_admin | t.me/uuzum_bonus_45k
+
 process.stdout.write('=== SERVER STARTING (webhook mode) ===\n');
 
 var express = require('express');
