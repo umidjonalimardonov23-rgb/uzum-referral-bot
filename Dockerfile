@@ -3,8 +3,7 @@ FROM node:24-slim
 
   # Install deps - ONLY for standalone server, no pnpm workspace
   COPY railway-package.json package.json
-  COPY railway-package-lock.json package-lock.json
-  RUN npm ci --production
+  RUN npm install --production
 
   # Copy standalone server
   COPY server.js .
