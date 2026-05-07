@@ -1,10 +1,9 @@
 {
-  "name": "uzum-referral-bot",
+  "name": "uzum-bot-standalone",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node server.js",
-    "build": "echo 'No build needed'"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
