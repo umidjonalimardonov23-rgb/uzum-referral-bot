@@ -20,8 +20,12 @@ app.get('/', function(req, res) {
 
 app.listen(PORT, '0.0.0.0', function() {
   process.stdout.write('HTTP server running on port ' + PORT + '\n');
-  startBot();
+  // Start bot after brief delay
+  setTimeout(startBot, 1000);
 });
+
+var botRetryCount = 0;
+var MAX_RETRIES = 10;
 
 function startBot() {
   var botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -31,28 +35,30 @@ function startBot() {
   }
   var grammy;
   try { grammy = require('grammy'); } catch(e) {
-    process.stderr.write('grammy error: ' + e.message + '\n');
+    process.stderr.write('grammy load error: ' + e.message + '\n');
     return;
   }
+
+  // Reset any existing Telegram sessions
+  fetch('https://api.telegram.org/bot' + botToken + '/deleteWebhook?drop_pending_updates=true')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      process.stdout.write('deleteWebhook: ' + JSON.stringify(d) + '\n');
+      // Wait 3s for sessions to clear
+      setTimeout(function() { launchBot(grammy, botToken); }, 3000);
+    })
+    .catch(function(e) {
+      process.stderr.write('deleteWebhook error: ' + e.message + '\n');
+      setTimeout(function() { launchBot(grammy, botToken); }, 3000);
+    });
+}
+
+function launchBot(grammy, botToken) {
   var APP_LINK = 'https://b.2u.uz/ref?c=50&a=L6DaizF7cl';
   var BOT_LINK = 'https://t.me/UzumBankRbot?start=L6DaizF7cl';
   var ADMIN_ID = 8787603995;
   var MINI_APP_URL = process.env.MINI_APP_URL || '';
 
-  // Clear any existing sessions before starting
-  fetch('https://api.telegram.org/bot' + botToken + '/deleteWebhook?drop_pending_updates=true')
-    .then(function() { return fetch('https://api.telegram.org/bot' + botToken + '/close'); })
-    .then(function() {
-      process.stdout.write('Webhook cleared, starting bot...\n');
-      setTimeout(function() { launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL); }, 2000);
-    })
-    .catch(function(e) {
-      process.stderr.write('Pre-launch error: ' + e.message + '\n');
-      setTimeout(function() { launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL); }, 2000);
-    });
-}
-
-function launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL) {
   var bot = new grammy.Bot(botToken);
 
   bot.command('start', async function(ctx) {
@@ -71,9 +77,9 @@ function launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL)
       '\u26A1\uFE0F Assalomu alaykum, ' + name + '! \u26A1\uFE0F\n\n' +
       '\u{1F4B0} Uzum Bank Referral Dasturiga xush kelibsiz!\n\n' +
       '\u{1F31F} Nima olasiz:\n' +
-      '\u2022 \u{1F4B3} Bepul virtual karta - 0 so\'mga\n' +
-      '\u2022 \u{1F911} Har bir do\'st uchun 45 000 so\'m\n' +
-      '\u2022 \u267E\uFE0F Cheksiz daromad imkoniyati\n\n' +
+      '  \u{1F4B3} Bepul virtual karta - 0 so\'m\n' +
+      "  \u{1F911} Har bir do'st uchun 45 000 so'm\n" +
+      '  \u267E\uFE0F Cheksiz daromad\n\n' +
       '\u{1F447} Menyudan tanlang:',
       { reply_markup: kb }
     );
@@ -81,17 +87,17 @@ function launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL)
       try {
         await bot.api.sendMessage(ADMIN_ID,
           '\u{1F195} Yangi: ' + name + ' (' + username + ') ID:' + userId);
-      } catch(e) {}
+      } catch(e) { /* ignore */ }
     }
   });
 
   bot.callbackQuery('open_card', async function(ctx) {
     await ctx.answerCallbackQuery();
     await ctx.reply(
-      '\u{1F4B3} Bepul Virtual Kartangizni Oching!\n\n' +
-      '\u2705 Karta ochish - TO\'LIQ BEPUL (0 so\'m)\n' +
+      '\u{1F4B3} Bepul Virtual Karta!\n\n' +
+      '\u2705 Karta ochish - TO\'LIQ BEPUL\n' +
       '\u2705 Onlayn xaridlar uchun ideal\n\n' +
-      '\u{1F517} Ro\'yxatdan o\'ting:',
+      'Ro\'yxatdan o\'ting:',
       { reply_markup: new grammy.InlineKeyboard().url('\u{1F680} Karta Ochish', APP_LINK) }
     );
   });
@@ -100,10 +106,9 @@ function launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL)
     await ctx.answerCallbackQuery();
     await ctx.reply(
       "\u{1F91D} Do'stlaringizni Taklif Qiling!\n\n" +
-      "\u{1F911} Har bir taklif uchun: 45 000 so'm\n" +
-      '\u267E\uFE0F Taklif limiti: CHEKSIZ\n\n' +
-      '\u{1F4F1} Ilova havolasi:\n' + APP_LINK + '\n\n' +
-      '\u{1F916} Bot havolasi:\n' + BOT_LINK,
+      "\u{1F911} Har taklif uchun: 45 000 so'm\n" +
+      '\u267E\uFE0F Limit: CHEKSIZ\n\n' +
+      'Havola: ' + APP_LINK,
       {
         reply_markup: new grammy.InlineKeyboard().url('\u2708\uFE0F Ulashish',
           'https://t.me/share/url?url=' + encodeURIComponent(APP_LINK) +
@@ -116,12 +121,9 @@ function launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL)
     await ctx.answerCallbackQuery();
     await ctx.reply(
       '\u{1F31F} Imkoniyatlar\n\n' +
-      '\u{1F4B3} Bepul Virtual Karta - 0 so\'m\n' +
-      "\u{1F911} 45 000 so'm bonus har bir do'st uchun\n" +
+      '\u{1F4B3} Bepul karta - 0 so\'m\n' +
+      "\u{1F911} 45 000 so'm/do'st\n" +
       '\u{1F6D2} Uzum Market imtiyozlari\n' +
-      '\u26A1\uFE0F Tezkor to\'lovlar 24/7\n' +
-      '\u{1F4CA} Cashback dasturi\n' +
-      '\u{1F512} O\'zbekiston litsenziyali bank\n' +
       '\u267E\uFE0F Cheksiz daromad!'
     );
   });
@@ -129,11 +131,10 @@ function launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL)
   bot.callbackQuery('how_it_works', async function(ctx) {
     await ctx.answerCallbackQuery();
     await ctx.reply(
-      '\u{1F4D6} Qanday Ishlaydi?\n\n' +
-      "1\uFE0F\u20E3 Havolani do'stingizga yuboring\n" +
-      "2\uFE0F\u20E3 Do'stingiz ilovani yuklab, karta ochadi\n" +
-      '3\uFE0F\u20E3 Sizga 45 000 so\'m tushadi! \u{1F4B0}\n\n' +
-      'Shunday oddiy!'
+      'Qanday Ishlaydi?\n\n' +
+      "1. Havolani do'stingizga yuboring\n" +
+      "2. Do'stingiz karta ochadi\n" +
+      '3. Sizga 45 000 so\'m tushadi! \u{1F4B0}'
     );
   });
 
@@ -141,37 +142,44 @@ function launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL)
     await ctx.answerCallbackQuery();
     await ctx.reply(
       '\u{1F4CA} Statistika\n\n' +
-      "\u{1F911} 10 do'st = 450 000 so'm\n" +
-      "\u{1F911} 50 do'st = 2 250 000 so'm\n" +
-      "\u{1F911} 100 do'st = 4 500 000 so'm\n\n" +
-      '\u{1F4F1} Havola: ' + APP_LINK
+      "10 do'st = 450 000 so'm\n" +
+      "50 do'st = 2 250 000 so'm\n" +
+      "100 do'st = 4 500 000 so'm"
     );
   });
 
   bot.callbackQuery('support', async function(ctx) {
     await ctx.answerCallbackQuery();
-    await ctx.reply('\u{1F4DE} Yordam: @UzumSupport\nRasmiy sayt: uzumbank.uz');
+    await ctx.reply('Yordam: @UzumSupport | uzumbank.uz');
   });
 
   bot.on('message', async function(ctx) {
     if (ctx.message && ctx.message.text && !ctx.message.text.startsWith('/')) {
-      await ctx.reply("/start buyrug'ini yuboring");
+      await ctx.reply("/start buyrug'ini yuboring.");
     }
   });
 
+  // Handle errors without crashing
   bot.catch(function(err) {
-    var msg = err && err.message ? err.message : String(err);
-    if (msg.includes('409') || msg.includes('Conflict')) {
-      process.stderr.write('409 conflict detected, restarting in 10s...\n');
-      setTimeout(function() { launchBot(botToken, grammy, APP_LINK, BOT_LINK, ADMIN_ID, MINI_APP_URL); }, 10000);
-    } else {
-      process.stderr.write('Bot error: ' + msg + '\n');
-    }
+    var msg = (err && err.message) ? err.message : String(err);
+    process.stderr.write('[bot.catch] ' + msg + '\n');
   });
 
-  bot.start({
-    onStart: function() { process.stdout.write('Telegram bot polling started!\n'); },
-    drop_pending_updates: true
-  });
-  process.stdout.write('Bot.start() called\n');
+  // Start with retry on 409
+  bot.start({ drop_pending_updates: true })
+    .then(function() { process.stdout.write('Bot stopped normally\n'); })
+    .catch(function(err) {
+      var msg = (err && err.message) ? err.message : String(err);
+      process.stderr.write('[bot.start error] ' + msg + '\n');
+      if (botRetryCount < MAX_RETRIES) {
+        botRetryCount++;
+        var delay = botRetryCount * 5000;
+        process.stdout.write('Retrying bot in ' + (delay/1000) + 's (attempt ' + botRetryCount + ')...\n');
+        setTimeout(function() { launchBot(grammy, botToken); }, delay);
+      } else {
+        process.stderr.write('Max bot retries reached, giving up\n');
+      }
+    });
+
+  process.stdout.write('Telegram bot started!\n');
 }
