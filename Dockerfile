@@ -1,4 +1,4 @@
-FROM node:24-slim
+FROM node:24-slim AS builder
   RUN npm install -g pnpm@10.26.1
   WORKDIR /app
 
@@ -13,9 +13,19 @@ FROM node:24-slim
 
   RUN pnpm --filter @workspace/api-server run build
 
-  RUN ls -la /app/artifacts/api-server/dist/index.mjs
+  # Verify build output
+  RUN ls -la /app/artifacts/api-server/dist/
+  RUN ls -la /app/artifacts/tg-miniapp/dist/public/
+
+  # Production image
+  FROM node:24-slim
+  WORKDIR /app
+
+  COPY --from=builder /app/artifacts/api-server/dist/ ./artifacts/api-server/dist/
+  COPY --from=builder /app/artifacts/tg-miniapp/dist/public/ ./artifacts/tg-miniapp/dist/public/
 
   ENV NODE_ENV=production
+  ENV PORT=8080
   EXPOSE 8080
 
   CMD ["node", "--enable-source-maps", "/app/artifacts/api-server/dist/index.mjs"]
