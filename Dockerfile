@@ -9,15 +9,14 @@ FROM node:24-slim
 
   RUN pnpm install --frozen-lockfile
 
+  # Build the mini app frontend
   RUN BASE_PATH="/" PORT="3000" pnpm --filter @workspace/tg-miniapp run build
 
-  RUN pnpm --filter @workspace/api-server run build
-
-  RUN ls -la /app/artifacts/api-server/dist/
+  # Verify frontend build
   RUN ls -la /app/artifacts/tg-miniapp/dist/public/
 
   ENV NODE_ENV=production
   EXPOSE 8080
 
-  CMD ["node", "--enable-source-maps", "/app/artifacts/api-server/dist/index.mjs"]
+  CMD ["node", "--import", "tsx/esm", "/app/artifacts/api-server/src/index.ts"]
   
