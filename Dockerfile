@@ -13,9 +13,11 @@ RUN BASE_PATH="/" PORT="3000" pnpm --filter @workspace/tg-miniapp run build
 
 RUN pnpm --filter @workspace/api-server run build
 
-# Verify the built file exists
 RUN ls -la /app/artifacts/api-server/dist/index.mjs
+
+RUN printf '#!/bin/sh\necho "=== UZUM BOT STARTING ==="\necho "PORT=$PORT"\necho "NODE_ENV=$NODE_ENV"\nexec node --enable-source-maps /app/artifacts/api-server/dist/index.mjs\n' > /app/start.sh && chmod +x /app/start.sh
 
 EXPOSE 8080
 ENV NODE_ENV=production
-CMD ["node", "--enable-source-maps", "/app/artifacts/api-server/dist/index.mjs"]
+ENV PORT=8080
+CMD ["/app/start.sh"]
