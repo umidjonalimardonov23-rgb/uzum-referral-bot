@@ -3,11 +3,6 @@
 
   [phases.install]
   cmds = ["npm install --production"]
-  dependsOn = ["setup"]
-  cacheDirectories = ["/root/.npm"]
-
-  [phases.build]
-  cmds = []
 
   [start]
   cmd = "node server.js"
