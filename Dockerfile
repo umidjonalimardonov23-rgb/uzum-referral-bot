@@ -13,6 +13,9 @@ RUN BASE_PATH="/" PORT="3000" pnpm --filter @workspace/tg-miniapp run build
 
 RUN pnpm --filter @workspace/api-server run build
 
+# Verify the built file exists
+RUN ls -la /app/artifacts/api-server/dist/index.mjs
+
 EXPOSE 8080
 ENV NODE_ENV=production
-CMD ["node", "--enable-source-maps", "artifacts/api-server/dist/index.mjs"]
+CMD ["node", "--enable-source-maps", "/app/artifacts/api-server/dist/index.mjs"]
