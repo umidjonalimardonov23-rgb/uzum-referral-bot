@@ -1,7 +1,7 @@
 'use strict';
-// v2.1 - @uzum_bonus_admin | t.me/uuzum_bonus_45k
+// v2.2 - polling mode, @uzum_bonus_admin | t.me/uuzum_bonus_45k
 
-process.stdout.write('=== SERVER STARTING (webhook mode) ===\n');
+process.stdout.write('=== UZUM BOT STARTING ===\n');
 
 var express = require('express');
 var cors = require('cors');
@@ -9,21 +9,17 @@ var cors = require('cors');
 var app = express();
 var PORT = parseInt(process.env.PORT || '8080', 10);
 var BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
-var WEBHOOK_DOMAIN = process.env.WEBHOOK_DOMAIN || '';
 
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 
 app.get('/api/healthz', function(req, res) {
-  res.json({ status: 'ok', time: new Date().toISOString(), mode: WEBHOOK_DOMAIN ? 'webhook' : 'polling' });
+  res.json({ status: 'ok', time: new Date().toISOString(), mode: 'polling' });
 });
 
 app.get('/', function(req, res) {
   res.json({ status: 'ok', service: 'UzumRef Bot' });
 });
-
-var grammy;
-var bot;
 
 app.listen(PORT, '0.0.0.0', async function() {
   process.stdout.write('HTTP server running on port ' + PORT + '\n');
@@ -33,44 +29,28 @@ app.listen(PORT, '0.0.0.0', async function() {
     return;
   }
 
+  var grammy;
   try { grammy = require('grammy'); } catch(e) {
     process.stderr.write('grammy error: ' + e.message + '\n');
     return;
   }
 
-  bot = buildBot();
+  // Eski webhook'ni o'chirish
+  try {
+    await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/deleteWebhook?drop_pending_updates=true');
+    process.stdout.write('Webhook deleted, starting polling...\n');
+  } catch(e) {}
 
-  if (WEBHOOK_DOMAIN) {
-    var webhookPath = '/webhook/' + BOT_TOKEN;
-    var webhookUrl = 'https://' + WEBHOOK_DOMAIN + webhookPath;
+  var bot = buildBot(grammy, BOT_TOKEN);
 
-    app.use(webhookPath, grammy.webhookCallback(bot, { secretToken: undefined }));
-
-    try {
-      var setRes = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/setWebhook', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: webhookUrl, drop_pending_updates: true, max_connections: 1 })
-      });
-      var setData = await setRes.json();
-      process.stdout.write('setWebhook: ' + JSON.stringify(setData) + '\n');
-      process.stdout.write('Webhook URL: ' + webhookUrl + '\n');
-    } catch(e) {
-      process.stderr.write('setWebhook error: ' + e.message + '\n');
-    }
-  } else {
-    process.stdout.write('WEBHOOK_DOMAIN not set, using polling...\n');
-    try {
-      await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/deleteWebhook?drop_pending_updates=true');
-    } catch(e) {}
-    setTimeout(function() {
-      bot.start({ drop_pending_updates: true })
-        .catch(function(e) { process.stderr.write('polling error: ' + e.message + '\n'); });
-    }, 3000);
-  }
+  setTimeout(function() {
+    bot.start({ drop_pending_updates: true })
+      .catch(function(e) { process.stderr.write('polling error: ' + e.message + '\n'); });
+    process.stdout.write('Bot polling started!\n');
+  }, 2000);
 });
 
-function buildBot() {
+function buildBot(grammy, BOT_TOKEN) {
   var APP_LINK = 'https://b.2u.uz/ref?c=50&a=L6DaizF7cl';
   var BOT_LINK = 'https://t.me/UzumBankRbot?start=L6DaizF7cl';
   var SUPPORT_USERNAME = '@uzum_bonus_admin';
@@ -274,7 +254,6 @@ function buildBot() {
         }
       );
 
-      // Adminga xabar yuborish
       if (userId && userId !== ADMIN_ID) {
         await notifyAdmin('📞 Yordam so\'raldi!\n\n👤 ' + name + '\n🔗 ' + username + '\n🆔 ' + userId);
       }
