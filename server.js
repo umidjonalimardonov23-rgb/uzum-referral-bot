@@ -342,14 +342,16 @@ function buildBot(grammy) {
       var userId = ctx.from && ctx.from.id;
       await ctx.reply(
         '📞 Qo\'llab-Quvvatlash\n\n' +
-        'Savollaringiz bo\'lsa, adminga murojaat qiling:\n\n' +
-        '👨‍💼 Admin: ' + SUPPORT_USERNAME + '\n' +
-        '📣 Kanal: ' + CHANNEL_LINK + '\n' +
-        '🕐 Ish vaqti: 24/7\n' +
-        '🌐 uzumbank.uz',
+        '❓ Savollaringiz bormi? Biz yordam beramiz!\n\n' +
+        '💬 Telegram: ' + SUPPORT_USERNAME + '\n' +
+        '📧 Uzum Bank rasmiy qo\'llab-quvvatlash\n\n' +
+        '🕐 Ish vaqti: 24/7\n\n' +
+        '🌐 Kanal silkamiz\n' +
+        CHANNEL_LINK + '\n\n' +
+        '🍇 Uzum Market',
         {
           reply_markup: new grammy.InlineKeyboard()
-            .url('👨‍💼 Admin', 'https://t.me/' + SUPPORT_USERNAME.replace('@', '')).url('📣 Kanal', CHANNEL_LINK).row()
+            .url('💬 Admin', 'https://t.me/' + SUPPORT_USERNAME.replace('@', '')).url('📣 Kanal', CHANNEL_LINK).row()
             .text('🔙 Orqaga', 'back_main')
         }
       );
