@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+  <html lang="uz">
+  <head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>UZUM BONUS BOT</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f1a;color:#fff;min-height:100vh;overflow-x:hidden}
+    .tab-btn{transition:all .2s}
+    .tab-btn.active{color:#a855f7;border-bottom:2px solid #a855f7}
+    .card{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border:1px solid rgba(168,85,247,.2);border-radius:16px}
+    .btn-purple{background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:12px;font-weight:700;transition:all .2s;active:scale-95}
+    .btn-purple:active{transform:scale(.97)}
+    .btn-outline{border:1.5px solid #7c3aed;color:#a855f7;border-radius:12px;font-weight:600;transition:all .2s}
+    .btn-outline:active{transform:scale(.97)}
+    .pulse-dot{width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+    .float{animation:float 3s ease-in-out infinite}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .page{display:none}
+    .page.active{display:block}
+    .step-num{background:linear-gradient(135deg,#7c3aed,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:2rem;font-weight:900}
+    input[type=range]{accent-color:#a855f7}
+    .copy-btn{cursor:pointer;transition:all .2s}
+    .shimmer{background:linear-gradient(90deg,#1a1a2e 25%,#252540 50%,#1a1a2e 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  </style>
+  </head>
+  <body>
+
+  <!-- HEADER -->
+  <div style="background:linear-gradient(135deg,#1a0533,#0d0d26);padding:16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(168,85,247,.2);position:sticky;top:0;z-index:100">
+    <div class="float" style="font-size:28px">🍇</div>
+    <div>
+      <div style="font-weight:800;font-size:16px">UZUM BONUS BOT</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+        <div class="pulse-dot"></div>
+        <span style="font-size:11px;color:#10b981;font-weight:600">Faol</span>
+        <span style="font-size:11px;color:#888">• Har bir do'st = 45 000 so'm</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div style="display:flex;background:#0f0f1a;border-bottom:1px solid rgba(168,85,247,.15);position:sticky;top:64px;z-index:99">
+    <button class="tab-btn active" onclick="showPage('home',this)" style="flex:1;padding:12px 4px;font-size:13px;font-weight:600;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent">🏠 Asosiy</button>
+    <button class="tab-btn" onclick="showPage('friends',this)" style="flex:1;padding:12px 4px;font-size:13px;font-weight:600;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent">👥 Do'stlar</button>
+    <button class="tab-btn" onclick="showPage('how',this)" style="flex:1;padding:12px 4px;font-size:13px;font-weight:600;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent">❓ Qanday</button>
+    <button class="tab-btn" onclick="showPage('info',this)" style="flex:1;padding:12px 4px;font-size:13px;font-weight:600;color:#888;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent">ℹ️ Batafsil</button>
+  </div>
+
+  <!-- HOME PAGE -->
+  <div id="page-home" class="page active" style="padding:16px">
+    <!-- Balance card -->
+    <div class="card" style="padding:20px;margin-bottom:16px;text-align:center;background:linear-gradient(135deg,#1a0533,#16213e)">
+      <div style="font-size:12px;color:#a78bfa;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">💰 Hisobingiz</div>
+      <div id="balance-display" class="shimmer" style="font-size:36px;font-weight:900;background:linear-gradient(135deg,#a855f7,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;min-height:44px;border-radius:8px"></div>
+      <div id="balance-text" style="display:none;font-size:36px;font-weight:900;background:linear-gradient(135deg,#a855f7,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent"></div>
+      <div style="margin-top:8px;font-size:13px;color:#888">Yig'ilgan bonus</div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="card" style="padding:16px;text-align:center">
+        <div style="font-size:24px;font-weight:900;color:#a855f7" id="refs-count">—</div>
+        <div style="font-size:11px;color:#888;margin-top:4px">Referrallar</div>
+      </div>
+      <div class="card" style="padding:16px;text-align:center">
+        <div style="font-size:24px;font-weight:900;color:#10b981" id="earned-total">—</div>
+        <div style="font-size:11px;color:#888;margin-top:4px">Jami topildi</div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px;color:#a78bfa;font-weight:600">📊 Progress</span>
+        <span id="progress-text" style="font-size:12px;color:#888">0/5 ta</span>
+      </div>
+      <div style="background:#1a1a2e;border-radius:8px;height:8px;overflow:hidden">
+        <div id="progress-bar" style="height:100%;border-radius:8px;background:linear-gradient(90deg,#7c3aed,#a855f7);width:0%;transition:width .8s ease"></div>
+      </div>
+      <div id="progress-msg" style="font-size:12px;color:#888;margin-top:8px;text-align:center">Keyingi bosqichga 5 ta qoldi</div>
+    </div>
+
+    <!-- Referral link -->
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;color:#a78bfa;font-weight:600;margin-bottom:10px">🔗 Referral havolangiz</div>
+      <div id="ref-link-box" style="background:#0f0f1a;border:1px solid rgba(168,85,247,.3);border-radius:10px;padding:12px;font-size:12px;color:#ccc;word-break:break-all;margin-bottom:10px">Yuklanmoqda...</div>
+      <button class="btn-purple" onclick="copyRefLink()" style="width:100%;padding:12px;font-size:14px;color:#fff;border:none;cursor:pointer">
+        📋 Havolani Nusxalash
+      </button>
+    </div>
+
+    <!-- Share button -->
+    <button class="btn-purple" onclick="shareLink()" style="width:100%;padding:14px;font-size:15px;color:#fff;border:none;cursor:pointer;margin-bottom:12px">
+      ✈️ Do'stlarga Ulashish
+    </button>
+
+    <!-- App link -->
+    <a href="https://b.2u.uz/ref?c=50&a=L6DaizF7cl" target="_blank" style="display:block">
+      <div class="btn-outline" style="width:100%;padding:13px;font-size:14px;text-align:center;cursor:pointer">
+        🍇 Uzum Bank Ilovasini Yuklab Olish
+      </div>
+    </a>
+  </div>
+
+  <!-- FRIENDS PAGE -->
+  <div id="page-friends" class="page" style="padding:16px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">👥</div>
+      <div style="font-size:20px;font-weight:800">Do'stlarni Taklif Qiling</div>
+      <div style="font-size:13px;color:#888;margin-top:4px">Har bir do'st = <span style="color:#a855f7;font-weight:700">45 000 so'm</span></div>
+    </div>
+
+    <!-- Calculator -->
+    <div class="card" style="padding:20px;margin-bottom:16px">
+      <div style="font-size:13px;color:#a78bfa;font-weight:600;margin-bottom:16px">🧮 Daromad hisoblash</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:14px;color:#ccc">Do'stlar soni:</span>
+        <span id="friends-count-display" style="font-size:20px;font-weight:900;color:#a855f7">10 ta</span>
+      </div>
+      <input type="range" min="1" max="100" value="10" id="friends-slider" onchange="updateCalc()" oninput="updateCalc()" style="width:100%;margin-bottom:16px"/>
+      <div style="background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(168,85,247,.1));border:1px solid rgba(168,85,247,.3);border-radius:12px;padding:16px;text-align:center">
+        <div style="font-size:13px;color:#a78bfa;margin-bottom:4px">Jami daromad</div>
+        <div id="calc-result" style="font-size:28px;font-weight:900;color:#a855f7">450 000 so'm</div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-size:12px;color:#888;margin-bottom:8px">Maqsadlar:</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="setGoal(5)" style="background:rgba(124,58,237,.2);border:1px solid rgba(168,85,247,.3);color:#a855f7;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">5 ta</button><button onclick="setGoal(10)" style="background:rgba(124,58,237,.2);border:1px solid rgba(168,85,247,.3);color:#a855f7;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">10 ta</button><button onclick="setGoal(25)" style="background:rgba(124,58,237,.2);border:1px solid rgba(168,85,247,.3);color:#a855f7;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">25 ta</button><button onclick="setGoal(50)" style="background:rgba(124,58,237,.2);border:1px solid rgba(168,85,247,.3);color:#a855f7;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">50 ta</button><button onclick="setGoal(100)" style="background:rgba(124,58,237,.2);border:1px solid rgba(168,85,247,.3);color:#a855f7;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">100 ta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Milestones -->
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;color:#a78bfa;font-weight:600;margin-bottom:12px">🏆 Nishon sovrinlar</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:rgba(124,58,237,.08);margin-bottom:6px">
+        <span style="font-size:16px">🥉</span>
+        <span style="font-size:13px;color:#ccc">5 do'st</span>
+        <span style="font-size:13px;font-weight:700;color:#a855f7">225 000 so'm</span>
+      </div><div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:rgba(124,58,237,.08);margin-bottom:6px">
+        <span style="font-size:16px">🥈</span>
+        <span style="font-size:13px;color:#ccc">10 do'st</span>
+        <span style="font-size:13px;font-weight:700;color:#a855f7">450 000 so'm</span>
+      </div><div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:rgba(124,58,237,.08);margin-bottom:6px">
+        <span style="font-size:16px">🥇</span>
+        <span style="font-size:13px;color:#ccc">25 do'st</span>
+        <span style="font-size:13px;font-weight:700;color:#a855f7">1 125 000 so'm</span>
+      </div><div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:rgba(124,58,237,.08);margin-bottom:6px">
+        <span style="font-size:16px">💎</span>
+        <span style="font-size:13px;color:#ccc">50 do'st</span>
+        <span style="font-size:13px;font-weight:700;color:#a855f7">2 250 000 so'm</span>
+      </div><div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:rgba(124,58,237,.08);margin-bottom:6px">
+        <span style="font-size:16px">👑</span>
+        <span style="font-size:13px;color:#ccc">100 do'st</span>
+        <span style="font-size:13px;font-weight:700;color:#a855f7">4 500 000 so'm</span>
+      </div>
+    </div>
+
+    <button class="btn-purple" onclick="shareLink()" style="width:100%;padding:14px;font-size:15px;color:#fff;border:none;cursor:pointer">
+      ✈️ Hoziroq Do'stlarga Ulashish
+    </button>
+  </div>
+
+  <!-- HOW PAGE -->
+  <div id="page-how" class="page" style="padding:16px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">⚡️</div>
+      <div style="font-size:20px;font-weight:800">Qanday Ishlaydi?</div>
+      <div style="font-size:13px;color:#888;margin-top:4px">3 ta oson qadam</div>
+    </div>
+
+    <div class="card" style="padding:20px;margin-bottom:16px">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="background:linear-gradient(135deg,#7c3aed33,#7c3aed22);border:1px solid #7c3aed44;border-radius:12px;padding:12px;font-size:28px;flex-shrink:0">📱</div>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:900;color:#7c3aed;letter-spacing:2px;margin-bottom:4px">QADAM 01</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px">Havolani ulashing</div>
+          <div style="font-size:13px;color:#888;line-height:1.5">Referral havolangizni do'stlaringizga yuboring — Telegram, WhatsApp yoki boshqa ilovalar orqali.</div>
+        </div>
+      </div>
+    </div><div class="card" style="padding:20px;margin-bottom:16px">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="background:linear-gradient(135deg,#3b82f633,#3b82f622);border:1px solid #3b82f644;border-radius:12px;padding:12px;font-size:28px;flex-shrink:0">💳</div>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:900;color:#3b82f6;letter-spacing:2px;margin-bottom:4px">QADAM 02</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px">Do'st karta ochadi</div>
+          <div style="font-size:13px;color:#888;line-height:1.5">Do'stingiz havolangiz orqali Uzum Bank ilovasini yuklab, bepul virtual karta ochadi.</div>
+        </div>
+      </div>
+    </div><div class="card" style="padding:20px;margin-bottom:16px">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="background:linear-gradient(135deg,#10b98133,#10b98122);border:1px solid #10b98144;border-radius:12px;padding:12px;font-size:28px;flex-shrink:0">⚡️</div>
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:900;color:#10b981;letter-spacing:2px;margin-bottom:4px">QADAM 03</div>
+          <div style="font-size:16px;font-weight:800;margin-bottom:8px">45 000 so'm oling!</div>
+          <div style="font-size:13px;color:#888;line-height:1.5">Karta muvaffaqiyatli ochilganda hisobingizga avtomatik 45 000 so'm tushadi!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(168,85,247,.1));border-color:rgba(168,85,247,.4)">
+      <div style="font-size:13px;color:#a78bfa;font-weight:600;margin-bottom:8px">💡 Muhim</div>
+      <div style="font-size:13px;color:#ccc;line-height:1.6">• Minimal yechish miqdori: <b style="color:#a855f7">50 000 so'm</b><br>• Bonus 24 soat ichida balansga tushadi<br>• Bir do'st faqat bir marta hisoblanadi</div>
+    </div>
+
+    <button class="btn-purple" onclick="showPage('home',document.querySelector('.tab-btn'));document.querySelectorAll('.tab-btn')[0].click()" style="width:100%;padding:14px;font-size:15px;color:#fff;border:none;cursor:pointer;margin-top:16px">
+      🚀 Boshlash
+    </button>
+  </div>
+
+  <!-- INFO PAGE -->
+  <div id="page-info" class="page" style="padding:16px">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:40px;margin-bottom:8px">🍇</div>
+      <div style="font-size:20px;font-weight:800">Uzum Bank haqida</div>
+    </div>
+
+    <div class="card" style="display:flex;gap:14px;padding:16px;margin-bottom:12px;align-items:flex-start">
+      <div style="font-size:28px;flex-shrink:0">💳</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Bepul Virtual Karta</div>
+        <div style="font-size:13px;color:#888;line-height:1.5">Uzum Bank virtual kartasi 0 so'mga ochiladi. Hech qanday yashirin to'lov yo'q!</div>
+      </div>
+    </div><div class="card" style="display:flex;gap:14px;padding:16px;margin-bottom:12px;align-items:flex-start">
+      <div style="font-size:28px;flex-shrink:0">🤑</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">45 000 so'm Bonus</div>
+        <div style="font-size:13px;color:#888;line-height:1.5">Har bir taklif qilgan do'stingiz uchun hisobingizga 45 000 so'm tushadi.</div>
+      </div>
+    </div><div class="card" style="display:flex;gap:14px;padding:16px;margin-bottom:12px;align-items:flex-start">
+      <div style="font-size:28px;flex-shrink:0">🛒</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Uzum Market Imtiyozlari</div>
+        <div style="font-size:13px;color:#888;line-height:1.5">Karta egasi sifatida Uzum Marketdagi maxsus narxlar va chegirmalardan foydalaning.</div>
+      </div>
+    </div><div class="card" style="display:flex;gap:14px;padding:16px;margin-bottom:12px;align-items:flex-start">
+      <div style="font-size:28px;flex-shrink:0">🔒</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Xavfsiz va Ishonchli</div>
+        <div style="font-size:13px;color:#888;line-height:1.5">Uzum Bank O'zbekistonning eng yirik fintech kompaniyalaridan biri. Pullaringiz xavfsiz.</div>
+      </div>
+    </div><div class="card" style="display:flex;gap:14px;padding:16px;margin-bottom:12px;align-items:flex-start">
+      <div style="font-size:28px;flex-shrink:0">⚡️</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Tezkor To'lovlar</div>
+        <div style="font-size:13px;color:#888;line-height:1.5">24/7 istalgan vaqtda to'lovlar, pul o'tkazmalar va boshqa xizmatlar.</div>
+      </div>
+    </div><div class="card" style="display:flex;gap:14px;padding:16px;margin-bottom:12px;align-items:flex-start">
+      <div style="font-size:28px;flex-shrink:0">📊</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Cheksiz Daromad</div>
+        <div style="font-size:13px;color:#888;line-height:1.5">Do'stlaringizni taklif qilishda cheklov yo'q — qancha ko'p, shuncha ko'p daromad!</div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px">
+      <a href="https://b.2u.uz/ref?c=50&a=L6DaizF7cl" target="_blank" style="display:block;margin-bottom:10px">
+        <div class="btn-purple" style="width:100%;padding:14px;font-size:14px;text-align:center;color:#fff">🍇 Uzum Bank Ilovasini Yuklab Olish</div>
+      </a>
+      <a href="https://t.me/uuzum_bonus_45k" target="_blank" style="display:block">
+        <div class="btn-outline" style="width:100%;padding:13px;font-size:14px;text-align:center">📣 Rasmiy Kanalga O'tish</div>
+      </a>
+    </div>
+  </div>
+
+  <script>
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if(tg) { tg.ready(); tg.expand(); }
+
+  var userId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : null;
+  var botUsername = 'uuzum_bonus_45k_bot';
+  var userData = null;
+
+  function fmt(n){ return Number(n||0).toLocaleString('uz-UZ') + ' so'm'; }
+
+  async function loadUser(){
+    if(!userId) {
+      document.getElementById('balance-display').style.display='none';
+      document.getElementById('balance-text').style.display='block';
+      document.getElementById('balance-text').textContent='0 so'm';
+      document.getElementById('refs-count').textContent='0';
+      document.getElementById('earned-total').textContent='0';
+      var link = 'https://t.me/'+botUsername;
+      document.getElementById('ref-link-box').textContent = link;
+      return;
+    }
+    try {
+      var r = await fetch('/api/user/'+userId);
+      var d = await r.json();
+      userData = d;
+      var bal = d.balance||0;
+      var refs = d.referrals||0;
+      var earned = d.totalEarned||0;
+
+      document.getElementById('balance-display').style.display='none';
+      document.getElementById('balance-text').style.display='block';
+      document.getElementById('balance-text').textContent = fmt(bal);
+      document.getElementById('refs-count').textContent = refs+' ta';
+      document.getElementById('earned-total').textContent = fmt(earned);
+
+      var prog = refs % 5;
+      var pct = Math.min((prog/5)*100,100);
+      document.getElementById('progress-bar').style.width = pct+'%';
+      document.getElementById('progress-text').textContent = prog+'/5 ta';
+      document.getElementById('progress-msg').textContent = 'Keyingi bosqichga '+(5-prog)+' ta qoldi';
+
+      var link = 'https://t.me/'+botUsername+'?start='+userId;
+      document.getElementById('ref-link-box').textContent = link;
+    } catch(e) {
+      document.getElementById('balance-display').style.display='none';
+      document.getElementById('balance-text').style.display='block';
+      document.getElementById('balance-text').textContent='0 so'm';
+    }
+  }
+
+  function copyRefLink(){
+    var link = userId ? 'https://t.me/'+botUsername+'?start='+userId : 'https://t.me/'+botUsername;
+    navigator.clipboard.writeText(link).then(function(){
+      if(tg) tg.HapticFeedback && tg.HapticFeedback.notificationOccurred('success');
+      var btn = event.target.closest('button');
+      var orig = btn.innerHTML;
+      btn.innerHTML = '✅ Nusxalandi!';
+      btn.style.background = 'linear-gradient(135deg,#059669,#10b981)';
+      setTimeout(function(){ btn.innerHTML=orig; btn.style.background=''; }, 2000);
+    }).catch(function(){
+      prompt('Havolani nusxalang:', link);
+    });
+  }
+
+  function shareLink(){
+    var link = userId ? 'https://t.me/'+botUsername+'?start='+userId : 'https://t.me/'+botUsername;
+    var text = encodeURIComponent('🍇 Uzum Bank — Bepul virtual karta oching va har bir do\'st uchun 45 000 so\'m bonus oling!');
+    var shareUrl = 'https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+text;
+    if(tg && tg.openTelegramLink) { tg.openTelegramLink(shareUrl); }
+    else { window.open(shareUrl,'_blank'); }
+  }
+
+  function updateCalc(){
+    var n = parseInt(document.getElementById('friends-slider').value);
+    document.getElementById('friends-count-display').textContent = n+' ta';
+    document.getElementById('calc-result').textContent = (n*45000).toLocaleString('uz-UZ')+' so\'m';
+  }
+
+  function setGoal(n){
+    document.getElementById('friends-slider').value = n;
+    updateCalc();
+  }
+
+  function showPage(name, btn){
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    document.getElementById('page-'+name).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    if(btn) btn.classList.add('active');
+  }
+
+  loadUser();
+  </script>
+  </body>
+  </html>
