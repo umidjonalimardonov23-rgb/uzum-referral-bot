@@ -1,6 +1,0 @@
-pnpm-workspace.yaml
-artifacts/
-lib/
-scripts/
-node_modules/
-.local/
