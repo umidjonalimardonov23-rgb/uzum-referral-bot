@@ -593,38 +593,35 @@ bot.on('message:text', async function(ctx) {
 
 bot.catch(function(err) { process.stderr.write('Bot error: ' + err.message + '\n'); });
 
-// Webhook route
-app.post('/webhook/' + BOT_TOKEN, async function(req, res) {
-  try { await bot.handleUpdate(req.body); res.json({ ok: true }); }
-  catch(e) { process.stderr.write('handleUpdate: ' + e.message + '\n'); res.json({ ok: false }); }
-});
+// Start Express for health checks
+  app.listen(PORT, '0.0.0.0', function() {
+    process.stdout.write('HTTP server on port ' + PORT + '\n');
+  });
 
-// Start
-app.listen(PORT, '0.0.0.0', async function() {
-  process.stdout.write('HTTP server on port ' + PORT + '\n');
-  var webhookUrl = 'https://' + WEBHOOK_DOMAIN + '/webhook/' + BOT_TOKEN;
-  try {
-    var r = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/setWebhook', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: webhookUrl, drop_pending_updates: true, max_connections: 10 })
+  // Delete any existing webhook and start polling
+  (async function() {
+    try {
+      var r = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/deleteWebhook?drop_pending_updates=true');
+      var d = await r.json();
+      process.stdout.write('deleteWebhook: ' + JSON.stringify(d) + '\n');
+    } catch(e) { process.stderr.write('deleteWebhook error: ' + e.message + '\n'); }
+
+    // Daily report
+    var now = new Date();
+    var msUntil9 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 0, 0) - now;
+    setTimeout(function() {
+      var sendReport = function() {
+        var s = getStats();
+        bot.api.sendMessage(ADMIN_ID,
+          '\uD83D\uDCCA <b>KUNLIK HISOBOT</b>\n\n\uD83D\uDCC5 ' + new Date().toLocaleDateString('uz-UZ') + '\n\n\uD83D\uDC65 Jami: ' + s.total + '\n\uD83C\uDD95 Bugun: ' + s.today + '\n\uD83D\uDCB3 Kartali: ' + s.withCards + '\n\u23F3 Kutilayotgan: ' + s.pendingCount + ' ta (' + fmt(s.pendingAmount) + ')\n\u2705 To\'langan: ' + fmt(s.totalPaid) + '\n\n\uD83C\uDFC6 Top: ' + (s.topReferrers[0] ? s.topReferrers[0].name + ' (' + s.topReferrers[0].referrals + ' ta)' : '\u2014'),
+          { parse_mode: 'HTML' }).catch(function() {});
+      };
+      sendReport(); setInterval(sendReport, 86400000);
+    }, msUntil9);
+
+    process.stdout.write('Bot v5.0 PRO — polling mode starting...\n');
+    bot.start({
+      onStart: function() { process.stdout.write('Bot v5.0 PRO ready! (polling)\n'); }
     });
-    var d = await r.json();
-    process.stdout.write('setWebhook: ' + JSON.stringify(d) + '\n');
-    process.stdout.write('Webhook: ' + webhookUrl + '\n');
-  } catch(e) { process.stderr.write('setWebhook error: ' + e.message + '\n'); }
-
-  // Daily report
-  var now = new Date();
-  var msUntil9 = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 0, 0) - now;
-  setTimeout(function() {
-    var sendReport = function() {
-      var s = getStats();
-      bot.api.sendMessage(ADMIN_ID,
-        '📊 <b>KUNLIK HISOBOT</b>\n\n📅 ' + new Date().toLocaleDateString('uz-UZ') + '\n\n👥 Jami: ' + s.total + '\n🆕 Bugun: ' + s.today + '\n💳 Kartali: ' + s.withCards + '\n⏳ Kutilayotgan: ' + s.pendingCount + ' ta (' + fmt(s.pendingAmount) + ')\n✅ To\'langan: ' + fmt(s.totalPaid) + '\n\n🏆 Top: ' + (s.topReferrers[0] ? s.topReferrers[0].name + ' (' + s.topReferrers[0].referrals + ' ta)' : '—'),
-        { parse_mode: 'HTML' }).catch(function() {});
-    };
-    sendReport(); setInterval(sendReport, 86400000);
-  }, msUntil9);
-
-  process.stdout.write('Bot v5.0 PRO ready!\n');
-});
+  })();
+  
