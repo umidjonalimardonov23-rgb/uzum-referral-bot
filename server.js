@@ -29,7 +29,16 @@ var DB_FILE = path.join(DATA_DIR, 'uzumbot.json');
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 app.get('/api/healthz', function(req, res) { res.json({ status: 'ok', version: '5.0', mode: 'webhook' }); });
-app.get('/', function(req, res) { res.json({ status: 'ok', service: 'UzumRef Bot v5.0 PRO' }); });
+  app.get('/', function(req, res) {
+    var htmlPath = path.join(__dirname, 'webapp.html');
+    if (fs.existsSync(htmlPath)) { res.sendFile(htmlPath); }
+    else { res.json({ status: 'ok', service: 'UzumRef Bot v5.0 PRO' }); }
+  });
+  app.get('/api/user/:userId', function(req, res) {
+    var user = getUser(parseInt(req.params.userId));
+    if (!user) return res.json({ balance: 0, referrals: 0, totalEarned: 0, cards: [] });
+    res.json({ balance: user.balance||0, referrals: user.referrals||0, totalEarned: user.totalEarned||0, cards: (user.cards||[]).length });
+  });
 
 // ─── DATABASE ──────────────────────────────────────────────────────────────────
 function ensureDir() { try { if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true }); } catch(e) {} }
